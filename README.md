@@ -103,7 +103,10 @@ These codes uses a right-handed System III (1965) (SYSIII) co-ordinate system (C
   <li>For con2020_model_xyz (cartesian input/output) the vector is [Bx, By, Bz] in nT.</li>
   </ul>   
 
-<b>References:</b>
+<h3>History</h3>
+This repository was made by merging a previous <a href="https://github.com/marissav06/con2020_idl">IDL specific</a> and a <a href="https://github.com/marissav06/con2020_matlab">Matlab specific</a> repository.
+
+<h4>References:</h4>
 <ul>
 <li>Connerney, J. E. P., Acuña, M. H., & Ness, N. F. (1981). Modeling the Jovian current sheet and inner magnetosphere. Journal of Geophysical Research, 86, 8370-8384. https://doi.org/10.1029/JA086iA10p08370</li>
 <li>Connerney, J. E. P., Timmins, S., Herceg, M., & Joergensen, J. L. (2020). A Jovian magnetodisc model for the Juno era. Journal of Geophysical Research: Space Physics, 125, e2020JA028138. https://doi.org/10.1029/2020JA028138</li>
