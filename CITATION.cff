@@ -1,0 +1,67 @@
+# This CITATION.cff file was based on one generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: 'Con2020 - Current Sheet Model Code'
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'M.F. '
+    family-names: Vogt
+    orcid: 'https://orcid.org/0000-0003-4885-8615'
+    affiliation: >-
+      Center for Space Physics, Boston University,
+      Boston, MA, USA
+    email: mvogt@bu.edu
+  - given-names: R.J.
+    family-names: Wilson
+    email: rob.wilson@lasp.colorado.edu
+    affiliation: >-
+      Laboratory for Atmospheric and Space Physics,
+      University of Colorado Boulder, Boulder,
+      Colorado, USA
+    orcid: 'https://orcid.org/0000-0001-9276-2368'
+  - given-names: G.
+    family-names: Provan
+    email: gp31@le.ac.uk
+    affiliation: >-
+      School of Physics and Astronomy, University
+      of Leicester, Leicester, UK
+    orcid: 'https://orcid.org/0000-0001-7442-4154'
+  - given-names: A.
+    family-names: Kamran
+    email: ak741@leicester.ac.uk
+    orcid: 'https://orcid.org/0000-0003-3736-9680'
+    affiliation: >-
+      School of Physics and Astronomy, University
+      of Leicester, Leicester, UK
+  - affiliation: >-
+      School of Physics and Astronomy, University
+      of Leicester, Leicester, UK
+    given-names: M.K.
+    family-names: James
+    email: mkj13@leicester.ac.uk
+    orcid: 'https://orcid.org/0000-0002-5699-6121'
+  - given-names: M.J.
+    family-names: Brennan
+    email: martin.brennan@jpl.nasa.gov
+    orcid: 'https://orcid.org/0000-0003-0796-4251'
+    affiliation: >-
+      Jet Propulsion Laboratory, California Institute
+      of Technology, Pasadena, CA, USA
+  - affiliation: >-
+      School of Physics and Astronomy, University
+      of Leicester, Leicester, UK
+    orcid: 'https://orcid.org/0000-0002-4041-0034'
+    email: swhc1@leicester.ac.uk
+    family-names: Cowley
+    given-names: S.W.H.
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.6981615
+    description: >-
+      This DOI represents all software versions, and
+      will always resolve to the latest one. 
+repository-code: 'https://github.com/marissav06/con2020'
