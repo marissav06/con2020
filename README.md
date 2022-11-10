@@ -55,12 +55,12 @@ These codes uses a right-handed System III (1965) (SYSIII) co-ordinate system (C
     <th>Default value</th></b>
   </tr>
   <tr>
-    <td>mu_i_div2__current_density_nT</td>
-    <td>mu0i0/2 term (current sheet current density)</td>
+    <td>mu_i_div2__current_parameter_nT</td>
+    <td>mu0i0/2 term (current sheet field parameter)</td>
     <td>139.6 nT</td>
   </tr>
   <tr>
-    <td>i_rho__radial_current_intensity_MA</td>
+    <td>i_rho__radial_current_MA</td>
     <td>radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)</td>
     <td>16.7 MA</td>
   </tr>
