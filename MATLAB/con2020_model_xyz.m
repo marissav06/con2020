@@ -31,8 +31,8 @@ function Bxyz = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, varargin)
 % Unless an option structure is provided it will default to parameters from Connerney et al., 2020.
 % Optional input of a structure: use_these_params
 % with the structure fields:
-%  use_these_params.mu_i_div2__current_density_nT           - mu0i0/2 term (current sheet current density), in nT
-%  use_these_params.i_rho__radial_current_intensity_MA      - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
+%  use_these_params.mu_i_div2__current_parameter_nT         - mu0i0/2 term (current sheet field parameter), in nT
+%  use_these_params.i_rho__radial_current_MA                - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
 %  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
 %  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
 %  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
@@ -74,20 +74,22 @@ function Bxyz = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, varargin)
 % RJ Wilson split initial Matlab and IDL code in to Cartesian and a Spherical wrapper code and updated this help text,
 % in August 2021, to make con2020_model_xyz and con2020_model_rtp.
 % RJW Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
+% RJW Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
+
 
 switch numel(varargin) % faster than if exist('use_these_params','var')
     case 1
-        use_these_params = varargin{1};    	
+        use_these_params = varargin{1};
         if ~isstruct(use_these_params)
             error('Must be a structure of terms to use in code')
         end
-        mu_i_div2__current_density_nT           = double(use_these_params.mu_i_div2__current_density_nT          );
+        mu_i_div2__current_parameter_nT         = double(use_these_params.mu_i_div2__current_parameter_nT        );
         r0__inner_rj                            = double(use_these_params.r0__inner_rj                           );
         r1__outer_rj                            = double(use_these_params.r1__outer_rj                           );
         d__cs_half_thickness_rj                 = double(use_these_params.d__cs_half_thickness_rj                );
         xt__cs_tilt_degs                        = double(use_these_params.xt__cs_tilt_degs                       );
         xp__cs_rhs_azimuthal_angle_of_tilt_degs = double(use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs);
-        i_rho__radial_current_intensity_MA      = double(use_these_params.i_rho__radial_current_intensity_MA     );
+        i_rho__radial_current_MA                = double(use_these_params.i_rho__radial_current_MA               );
         error_check = double(use_these_params.error_check);
         
         if strcmpi(eq_type,'default_values') % case insensitive % Not yet checked if eq_type is a character string
@@ -95,13 +97,13 @@ switch numel(varargin) % faster than if exist('use_these_params','var')
         end
     case 0
         % Make sure all of these numbers are doubles!
-        Default_values.mu_i_div2__current_density_nT           = 139.6; % current density (nT)
+        Default_values.mu_i_div2__current_parameter_nT         = 139.6; % current sheet field parameter (nT)
         Default_values.r0__inner_rj                            =   7.8; % inner radius (Rj)
         Default_values.r1__outer_rj                            =  51.4; % outer radius (Rj)
         Default_values.d__cs_half_thickness_rj                 =   3.6; % half-height  (Rj)
         Default_values.xt__cs_tilt_degs                        =   9.3; % dipole tilt (Deg.)
         Default_values.xp__cs_rhs_azimuthal_angle_of_tilt_degs = 155.8; % dipole longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
-        Default_values.i_rho__radial_current_intensity_MA      =  16.7; % radial current term from Connerney et al., 2020, in mega-Amps.
+        Default_values.i_rho__radial_current_MA                =  16.7; % radial current term from Connerney et al., 2020, in mega-Amps.
         % NOTE: The default value (16.7 MA) is the average value from Connerney et al 2020. This value was shown to vary from one
         % pass to the next, where Table 2 (units of MA) provides radial current intensity values for 23 of the first 24 perijoves
         % (units mistakenly given as nT in the article text).
@@ -113,13 +115,13 @@ switch numel(varargin) % faster than if exist('use_these_params','var')
             return
         end
         
-        mu_i_div2__current_density_nT           = Default_values.mu_i_div2__current_density_nT          ;
+        mu_i_div2__current_parameter_nT         = Default_values.mu_i_div2__current_parameter_nT        ;
         r0__inner_rj                            = Default_values.r0__inner_rj                           ;
         r1__outer_rj                            = Default_values.r1__outer_rj                           ;
         d__cs_half_thickness_rj                 = Default_values.d__cs_half_thickness_rj                ;
         xt__cs_tilt_degs                        = Default_values.xt__cs_tilt_degs                       ;
         xp__cs_rhs_azimuthal_angle_of_tilt_degs = Default_values.xp__cs_rhs_azimuthal_angle_of_tilt_degs;
-        i_rho__radial_current_intensity_MA      = Default_values.i_rho__radial_current_intensity_MA     ;
+        i_rho__radial_current_MA                = Default_values.i_rho__radial_current_MA               ;
         error_check = Default_values.error_check ;
         
     otherwise
@@ -136,22 +138,22 @@ eq_type = lower(eq_type);
 if error_check(1)
     % Check optional input values to be numeric, and doubles!
     if  (~isnumeric(error_check)) || (numel(error_check)~=1), error('ERROR: Field  error_check must be a scalar double number');end
-    if  (~isnumeric(mu_i_div2__current_density_nT          )) || (numel(mu_i_div2__current_density_nT          )~=1), error('ERROR: Field       mu_i_div2__current_density_nT     must be a scalar double number');end
+    if  (~isnumeric(mu_i_div2__current_parameter_nT        )) || (numel(mu_i_div2__current_parameter_nT        )~=1), error('ERROR: Field     mu_i_div2__current_parameter_nT     must be a scalar double number');end
     if  (~isnumeric(r0__inner_rj                           )) || (numel(r0__inner_rj                           )~=1), error('ERROR: Field               r0__inner_rj              must be a scalar double number');end
     if  (~isnumeric(r1__outer_rj                           )) || (numel(r1__outer_rj                           )~=1), error('ERROR: Field               r1__outer_rj              must be a scalar double number');end
     if  (~isnumeric(d__cs_half_thickness_rj                )) || (numel(d__cs_half_thickness_rj                )~=1), error('ERROR: Field          d__cs_half_thickness_rj        must be a scalar double number');end
     if  (~isnumeric(xt__cs_tilt_degs                       )) || (numel(xt__cs_tilt_degs                       )~=1), error('ERROR: Field             xt__cs_tilt_degs            must be a scalar double number');end
     if  (~isnumeric(xp__cs_rhs_azimuthal_angle_of_tilt_degs)) || (numel(xp__cs_rhs_azimuthal_angle_of_tilt_degs)~=1), error('ERROR: Field xp__cs_rhs_azimuthal_angle_of_tilt_degs must be a scalar double number');end
-    if  (~isnumeric(i_rho__radial_current_intensity_MA     )) || (numel(i_rho__radial_current_intensity_MA     )~=1), error('ERROR: Field    i_rho__radial_current_intensity_MA   must be a scalar double number');end
+    if  (~isnumeric(i_rho__radial_current_MA               )) || (numel(i_rho__radial_current_MA               )~=1), error('ERROR: Field         i_rho__radial_current_MA        must be a scalar double number');end
     
     %if  (error_check~=0) && (error_check~=1), error('ERROR: Field  error_check must be 0 or 1');end
     % if here error_check must be scalar and not 0
     if error_check~=1, error('ERROR: Field  error_check must be 0 or 1');end
     error_check = true; 
-    if mu_i_div2__current_density_nT <= 0           , error('mu_i_div2__current_density_nT must be > 0'           ),end
-    if                  r0__inner_rj <= 0           , error(                 'r0__inner_rj must be > 0'           ),end
-    if                  r1__outer_rj <= r0__inner_rj, error(                 'r1__outer_rj must be > r0__inner_rj'),end
-    if       d__cs_half_thickness_rj <= 0           , error(      'd__cs_half_thickness_rj must be > 0'           ),end
+    if mu_i_div2__current_parameter_nT <= 0           , error('mu_i_div2__current_parameter_nT must be > 0'           ),end
+    if                  r0__inner_rj   <= 0           , error(                   'r0__inner_rj must be > 0'           ),end
+    if                  r1__outer_rj   <= r0__inner_rj, error(                   'r1__outer_rj must be > r0__inner_rj'),end
+    if       d__cs_half_thickness_rj   <= 0           , error(        'd__cs_half_thickness_rj must be > 0'           ),end
 
 
     % Check if equation input is type char and matches a selection
@@ -325,9 +327,9 @@ if (n_ind_integral ~= 0)
                 brho_int_funct = besselj_rho_rho1_1.*beselj_rho_r0_0.*sinh(d__cs_half_thickness_rj*lambda_int_brho).*exp(-abs_z1(ind_for_integral).*lambda_int_brho)./lambda_int_brho;
                 bz_int_funct   = besselj_z_rho1_0  .*beselj_z_r0_0  .*sinh(d__cs_half_thickness_rj*lambda_int_bz  ).*exp(-abs_z1(ind_for_integral).*lambda_int_bz  )./lambda_int_bz  ;
                 
-                %brho1(ind_for_integral) = mu_i_div2__current_density_nT*2*int_tabulated_rjw2_sub(lambda_int_brho,brho_int_funct);  %#ok<AGROW>
+                %brho1(ind_for_integral) = mu_i_div2__current_parameter_nT*2*int_tabulated_rjw2_sub(lambda_int_brho,brho_int_funct);  %#ok<AGROW>
                 % Can use Trapezoidal rule approx
-                brho1(ind_for_integral) = mu_i_div2__current_density_nT*2*dlambda_brho * (sum(brho_int_funct) - (brho_int_funct(1) + brho_int_funct(end))*0.5 ); %#ok<AGROW>
+                brho1(ind_for_integral) = mu_i_div2__current_parameter_nT*2*dlambda_brho * (sum(brho_int_funct) - (brho_int_funct(1) + brho_int_funct(end))*0.5 ); %#ok<AGROW>
 
                 if z1(ind_for_integral) < 0, brho1(ind_for_integral) = -brho1(ind_for_integral); end %#ok<AGROW>
                 
@@ -335,14 +337,14 @@ if (n_ind_integral ~= 0)
                 brho_int_funct = besselj_rho_rho1_1.*beselj_rho_r0_0.*(    sinh(z1(ind_for_integral).*lambda_int_brho).*exp(-d__cs_half_thickness_rj*lambda_int_brho))./lambda_int_brho;
                 bz_int_funct   = besselj_z_rho1_0  .*beselj_z_r0_0  .*(1 - cosh(z1(ind_for_integral).*lambda_int_bz  ).*exp(-d__cs_half_thickness_rj*lambda_int_bz  ))./lambda_int_bz  ;
                 
-                %brho1(ind_for_integral) = mu_i_div2__current_density_nT*2*int_tabulated_rjw2_sub(lambda_int_brho,brho_int_funct);
+                %brho1(ind_for_integral) = mu_i_div2__current_parameter_nT*2*int_tabulated_rjw2_sub(lambda_int_brho,brho_int_funct);
                 % Can use Trapezoidal rule approx
-                brho1(ind_for_integral) = mu_i_div2__current_density_nT*2* dlambda_brho * (sum(brho_int_funct) - (brho_int_funct(1) + brho_int_funct(end))*0.5 ); %#ok<AGROW>
+                brho1(ind_for_integral) = mu_i_div2__current_parameter_nT*2* dlambda_brho * (sum(brho_int_funct) - (brho_int_funct(1) + brho_int_funct(end))*0.5 ); %#ok<AGROW>
             end
             
-            %bz1(ind_for_integral)   = mu_i_div2__current_density_nT*2*int_tabulated_rjw2_sub(lambda_int_bz  ,bz_int_funct  );
+            %bz1(ind_for_integral)   = mu_i_div2__current_parameter_nT*2*int_tabulated_rjw2_sub(lambda_int_bz  ,bz_int_funct  );
             % Can use Trapezoidal rule approx
-            bz1(ind_for_integral)   = mu_i_div2__current_density_nT*2* dlambda_bz * (sum(bz_int_funct) - (bz_int_funct(1) + bz_int_funct(end))*0.5 ); %#ok<AGROW>
+            bz1(ind_for_integral)   = mu_i_div2__current_parameter_nT*2* dlambda_bz * (sum(bz_int_funct) - (bz_int_funct(1) + bz_int_funct(end))*0.5 ); %#ok<AGROW>
             
         end
         if scalar_input, break; end % If only scalar, stop doing for loops once we found the one we want
@@ -350,11 +352,11 @@ if (n_ind_integral ~= 0)
 end
 
 % Work out the finite sheet here - re-use some bits for the final analysis
-[brho_finite, bz_finite] =                     con2020_model_xyz_analytic( rho1, z1, rho1_sq, d__cs_half_thickness_rj, r1__outer_rj, mu_i_div2__current_density_nT, scalar_input);
+[brho_finite, bz_finite] =                     con2020_model_xyz_analytic( rho1, z1, rho1_sq, d__cs_half_thickness_rj, r1__outer_rj, mu_i_div2__current_parameter_nT, scalar_input);
 
 % Do now near Analytic bit
 if (n_ind_analytic ~= 0)
-    [brho1(ind_analytic), bz1(ind_analytic)] = con2020_model_xyz_analytic( rho1(ind_analytic), z1(ind_analytic), rho1_sq(ind_analytic), d__cs_half_thickness_rj, r0__inner_rj, mu_i_div2__current_density_nT, scalar_input);
+    [brho1(ind_analytic), bz1(ind_analytic)] = con2020_model_xyz_analytic( rho1(ind_analytic), z1(ind_analytic), rho1_sq(ind_analytic), d__cs_half_thickness_rj, r0__inner_rj, mu_i_div2__current_parameter_nT, scalar_input);
 end
 
 % Check that brho1 and bz1 do not contain NaNs or Infs
@@ -366,7 +368,7 @@ end
 
 
 % New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
-bphi1 = 2.7975*i_rho__radial_current_intensity_MA./rho1;
+bphi1 = 2.7975*i_rho__radial_current_MA./rho1;
 if scalar_input
     if abs_z1 < d__cs_half_thickness_rj, bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj; end
     
@@ -420,7 +422,7 @@ end
 % trap = h * (sum(f) - (f(1) + f(end))*0.5 );
 % end
 %%
-function [brho1, bz1] = con2020_model_xyz_analytic(rho1, z1, rho1_sq, d__cs_half_thickness_rj,r, mu_i_div2__current_density_nT, scalar_input)
+function [brho1, bz1] = con2020_model_xyz_analytic(rho1, z1, rho1_sq, d__cs_half_thickness_rj,r, mu_i_div2__current_parameter_nT, scalar_input)
 
     % Analytic equations
     % Connerney et al. 1981's equations for the field produced by a semi-infinite disk of thickness D, inner edge R0, outer edge R1 -
@@ -465,22 +467,22 @@ function [brho1, bz1] = con2020_model_xyz_analytic(rho1, z1, rho1_sq, d__cs_half
         f2_cubed = f2_sq.*f2;
         
         % calculate the terms which make equations 9a and 9b
-     	rhoov2   = rho1(ind_LT)/2;
-     	rho2ov4  = rhoov2  .* rhoov2;
-     	rho3ov16 = rho2ov4 .* rhoov2/2;
+        rhoov2   = rho1(ind_LT)/2;
+        rho2ov4  = rhoov2  .* rhoov2;
+        rho3ov16 = rho2ov4 .* rhoov2/2;
 
         % these bits are used to form 9a
-     	f3 = (r_sq - 2*zmd2)./(f1_sq.*f1_sq.*f1);
+        f3 = (r_sq - 2*zmd2)./(f1_sq.*f1_sq.*f1);
         f4 = (r_sq - 2*zpd2)./(f2_sq.*f2_sq.*f2);
 
         terma0 = rhoov2  .*(1./f1 - 1./f2);
         terma1 = rho3ov16.*(f3    - f4   );
-     	brho1(ind_LT) = mu_i_div2__current_density_nT*(terma0 + terma1);
- 	
+        brho1(ind_LT) = mu_i_div2__current_parameter_nT*(terma0 + terma1);
+
         % now equation 9b
         termb0 = log((z1pd(ind_LT) + f2)./(z1md(ind_LT) + f1));
-    	termb1 = rho2ov4.*(z1pd(ind_LT)./f2_cubed - z1md(ind_LT)./f1_cubed);
-        bz1(  ind_LT) = mu_i_div2__current_density_nT*(termb0 + termb1);
+        termb1 = rho2ov4.*(z1pd(ind_LT)./f2_cubed - z1md(ind_LT)./f1_cubed);
+        bz1(  ind_LT) = mu_i_div2__current_parameter_nT*(termb0 + termb1);
     end
     if n_ind_GE % i.e. (n_ind_GE ~= 0)
         zmd2 = z1md(ind_GE).*z1md(ind_GE);
@@ -493,7 +495,7 @@ function [brho1, bz1] = con2020_model_xyz_analytic(rho1, z1, rho1_sq, d__cs_half
         f2_cubed = f2_sq.*f2;
 
       
-    	%equation 13a
+        %equation 13a
         terma0 = (1./rho1(ind_GE)).*(f1 - f2);
         terma1 = (rho1(ind_GE).*r_sq/4).*(1./f2_cubed - 1./f1_cubed);
         % from Python z1_clip = z1.clip(max=D,min=-D)
@@ -511,9 +513,9 @@ function [brho1, bz1] = con2020_model_xyz_analytic(rho1, z1, rho1_sq, d__cs_half
             z1_clip(z1_clip < -d__cs_half_thickness_rj) = -d__cs_half_thickness_rj;
         end
         terma2 = (2./rho1(ind_GE)).*z1_clip;
-        brho1(ind_GE) = mu_i_div2__current_density_nT*(terma0 + terma1 + terma2);
-	
+        brho1(ind_GE) = mu_i_div2__current_parameter_nT*(terma0 + terma1 + terma2);
+
         %equation 13b - same as before
-   	    bz1(ind_GE) = mu_i_div2__current_density_nT*(log((z1pd(ind_GE)+f2)./(z1md(ind_GE)+f1)) + (r_sq/4).*((z1pd(ind_GE)./f2_cubed) - (z1md(ind_GE)./f1_cubed)));
+        bz1(ind_GE) = mu_i_div2__current_parameter_nT*(log((z1pd(ind_GE)+f2)./(z1md(ind_GE)+f1)) + (r_sq/4).*((z1pd(ind_GE)./f2_cubed) - (z1md(ind_GE)./f1_cubed)));
     end
 end 
