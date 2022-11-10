@@ -30,8 +30,8 @@ FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_par
   ;% Unless an option structure is provided it will default to parameters from Connerney et al., 2020.
   ;% Optional input of a structure: use_these_params
   ;% with the structure fields:
-  ;%  use_these_params.mu_i_div2__current_density_nT           - mu0i0/2 term (current sheet current density), in nT
-  ;%  use_these_params.i_rho__radial_current_intensity_MA      - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
+  ;%  use_these_params.mu_i_div2__current_parameter_nT         - mu0i0/2 term (current sheet field parameter), in nT
+  ;%  use_these_params.i_rho__radial_current_MA                - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
   ;%  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
   ;%  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
   ;%  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
@@ -73,6 +73,7 @@ FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_par
   ;% RJ Wilson split initial Matlab and IDL code in to Cartesian and a Spherical wrapper code and updated this help text,
   ;% in August 2021, to make con2020_model_xyz and con2020_model_rtp.
   ;% RJW Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
+  ;% RJW Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
 
   ON_ERROR, 2 ; % Exit code if an error in main, don't stop in code - no Matlab equivalent, just delete line in Matlab
   FORWARD_FUNCTION con2020_model_xyz ; telling IDL this is a function, in case con2020_model_xyz has not been compiled yet.
