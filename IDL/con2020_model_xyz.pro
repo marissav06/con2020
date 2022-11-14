@@ -60,6 +60,8 @@
   ;%        For the integral equations we use the Bessel functions from Connerney et al. 1981, eqs. 14, 15, 17, 18
   ;%        We do not integrate lambda from zero to infinity, but vary the integration limit depending on the value of the
   ;%        Bessel functions.
+  ;%        For computational speed, the inner disk edge calculations use the integral equations,
+  ;%        but the outer disk edge calculations use the anlytical equations.
   ;%
   ;% Updates:
   ;% by Marissa Vogt, March 2021,
@@ -73,6 +75,7 @@
   ;% in August 2021, to make con2020_model_xyz and con2020_model_rtp.
   ;% RJW Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
   ;% RJW Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
+  ;% RJ Wilson put in a fix to prevent Infinities/NaNs in Bphi1 when rho1 = 0, and updated the Integral equation comment above to note that the outer edge always uses analytical equations, even if integral is chosen.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Function con2020_model_xyz begins around line 185. Sub-functions are listed first (in order to compile appropriately in IDL).
@@ -472,12 +475,23 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
 
   ;% New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
   bphi1 = 2.7975d*i_rho__radial_current_MA/rho1
-
+  ;% Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and i_rho__radial_current_MA=0 and rho1 = 0
+  ;% deal with this below, separately for scalar_input or vector
   IF scalar_input THEN BEGIN
-    IF abs_z1 LT d__cs_half_thickness_rj  THEN  bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj
+    IF rho1 NE 0d THEN BEGIN
+      IF abs_z1 LT d__cs_half_thickness_rj  THEN bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj
 
-    IF z1     GT     0.d                  THEN bphi1 = -bphi1
+      IF     z1 GT     0d                   THEN bphi1 = -bphi1
+    ENDIF ELSE BEGIN ;% if rho1 == 0, a very very rare occurence
+      bphi1 = 0d ;% Remove Infinity or NaN
+    ENDELSE
   ENDIF ELSE BEGIN
+    ind = WHERE(rho1 EQ 0, NULL = 1)
+    IF N_ELEMENTS(ind) NE 0 THEN BEGIN ;% a very very rare occurence
+      bphi1[ind] = 0d ;% Remove any Infinity or NaN
+      ;% will let scaling below on z1 happen as Bphi1 will still be 0 anyway
+    ENDIF
+
     ind = WHERE(abs_z1 LT d__cs_half_thickness_rj, NULL=1)
     IF N_ELEMENTS(ind) NE 0 THEN bphi1[ind] =  bphi1[ind] * abs_z1[ind] / d__cs_half_thickness_rj
 
