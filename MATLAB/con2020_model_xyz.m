@@ -62,6 +62,8 @@ function Bxyz = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, varargin)
 %        For the integral equations we use the Bessel functions from Connerney et al. 1981, eqs. 14, 15, 17, 18
 %        We do not integrate lambda from zero to infinity, but vary the integration limit depending on the value of the
 %        Bessel functions.
+%        For computational speed, the inner disk edge calculations use the integral equations,
+%        but the outer disk edge calculations use the anlytical equations.
 %
 % Updates:
 % by Marissa Vogt (mvogt@bu.edu), March 2021,
@@ -73,9 +75,9 @@ function Bxyz = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, varargin)
 % which was then replaced by some in-line code instead of calling the subfunction
 % RJ Wilson split initial Matlab and IDL code in to Cartesian and a Spherical wrapper code and updated this help text,
 % in August 2021, to make con2020_model_xyz and con2020_model_rtp.
-% RJW Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
-% RJW Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
-
+% RJ Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
+% RJ Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
+% RJ Wilson put in a fix to prevent Infinities/NaNs in Bphi1 when rho1 = 0, and updated the Integral equation comment above to note that the outer edge always uses analytical equations, even if integral is chosen.
 
 switch numel(varargin) % faster than if exist('use_these_params','var')
     case 1
@@ -369,11 +371,23 @@ end
 
 % New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
 bphi1 = 2.7975*i_rho__radial_current_MA./rho1;
+% Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and i_rho__radial_current_MA=0 and rho1 = 0
+% deal with this below, separately for scalar_input or vector
 if scalar_input
-    if abs_z1 < d__cs_half_thickness_rj, bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj; end
-    
-    if z1     > 0                      , bphi1 = -bphi1                                   ; end
+    if rho1 ~= 0
+        if abs_z1 < d__cs_half_thickness_rj, bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj; end
+
+        if     z1 > 0                      , bphi1 = -bphi1                                   ; end
+    else % if rho1 == 0, a very very rare occurence
+        bphi1 = 0; % Remove Infinity or NaN
+    end
 else
+    ind = find(rho1 == 0);
+    if numel(ind) ~= 0 % a very very rare occurence
+        bphi1(ind) = 0; % Remove any Infinity or NaN
+        % will let scaling below on z1 happen as Bphi1 will still be 0 anyway
+    end
+
     ind = find(abs_z1 < d__cs_half_thickness_rj);
     if ~isempty(ind), bphi1(ind) =  bphi1(ind) .* abs_z1(ind) / d__cs_half_thickness_rj; end
     

@@ -62,6 +62,8 @@ function brtp = con2020_model_rtp(eq_type, r_rj, colat_rads, elong_rads, varargi
 %        For the integral equations we use the Bessel functions from Connerney et al. 1981, eqs. 14, 15, 17, 18
 %        We do not integrate lambda from zero to infinity, but vary the integration limit depending on the value of the
 %        Bessel functions.
+%        For computational speed, the inner disk edge calculations use the integral equations,
+%        but the outer disk edge calculations use the anlytical equations.
 %
 % Updates:
 % by Marissa Vogt (mvogt@bu.edu), March 2021,
@@ -75,6 +77,7 @@ function brtp = con2020_model_rtp(eq_type, r_rj, colat_rads, elong_rads, varargi
 % in August 2021, to make con2020_model_xyz and con2020_model_rtp.
 % RJW Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
 % RJW Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
+% RJ Wilson put in a fix to prevent Infinities/NaNs in Bphi1 when rho1 = 0, and updated the Integral equation comment above to note that the outer edge always uses analytical equations, even if integral is chosen.
 
 if strcmpi(eq_type,'default_values') % case insensitive. % Not yet checked if eq_type is a character string, Matlab doesn't care
     brtp = con2020_model_xyz(eq_type);
