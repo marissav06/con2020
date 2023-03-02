@@ -2,16 +2,14 @@
 
 This repository contains IDL and MATLAB code for the Connerney et al. (2020) Jupiter current sheet model. This is part of a community code project: [Magnetospheres of the Outer Planets Group Community Code](https://lasp.colorado.edu/home/mop/missions/juno/community-code). For Python versions, please see the [stand alone code](https://github.com/gabbyprovan/con2020/), or the [JupiterMag](https://github.com/mattkjames7/JupiterMag) package. 
 
-**Citation doi**: <a href="https://doi.org/10.5281/zenodo.6981615">10.5281/zenodo.6981615</a> (for all releases)
-
+**Citation DOI**: <a href="https://doi.org/10.5281/zenodo.6981615">10.5281/zenodo.6981615</a> (for all releases)
 Each version release also has its own DOI, click the link above to get to the DOI of specific versions.
 
-
-A PDF documentation file ([con2020_final_code_documentation_sept13_2021.pdf](https://raw.githubusercontent.com/marissav06/con2020/main/con2020_final_code_documentation_sept13_2021.pdf)) is available in this repository. It describes the Connerney current sheet model and general code development (equations used, numerical integration assumptions, accuracy testing, etc.). Details specific to the IDL code are provided in this readme file.
+**Journal Paper DOI**: https://doi.org/10.1007/s11214-023-00961-3 (PDF via DOI, or https://rdcu.be/c5I71, see Journal Publication.)
 
 This code provides <b>only the magnetic field due to the current sheet</b>. For the full magnetospheric field one should include a model for Jupiter's internal magnetic field, such as VIP4 or JRM09. You can find IDL code for the JRM09 internal field model here: https://github.com/marissav06/jovian_jrm09_internal
 
-These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Provan, Marissa Vogt, and Rob Wilson, with thanks to Jack Connerney and Masafumi Imai. They are intended for use by the Juno science team and other members of the planetary magnetospheres community. Our contact information is in the documentation PDF file.
+These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Provan, Marissa Vogt, and Rob Wilson, with thanks to Jack Connerney, Masafumi Imai, and Stan Cowley. The codes are intended for use by the Juno science team and other members of the planetary magnetospheres community. Questions, corrections, or other comments can be shared with the authors by emailing mvogt@bu.edu.
 
 These codes uses a right-handed System III (1965) (SYSIII) co-ordinate system (Cartesian or Spherical), and assumes that 1 jovian radius (R<sub>J</sub>) = 71,492 km.
 
@@ -111,4 +109,5 @@ This repository was made by merging a previous <a href="https://github.com/maris
 <li>Connerney, J. E. P., Acuña, M. H., & Ness, N. F. (1981). Modeling the Jovian current sheet and inner magnetosphere. Journal of Geophysical Research, 86, 8370-8384. https://doi.org/10.1029/JA086iA10p08370</li>
 <li>Connerney, J. E. P., Timmins, S., Herceg, M., & Joergensen, J. L. (2020). A Jovian magnetodisc model for the Juno era. Journal of Geophysical Research: Space Physics, 125, e2020JA028138. https://doi.org/10.1029/2020JA028138</li>
 <li>Edwards, T. M., Bunce, E. J., & Cowley, S. W. H. (2001). A note on the vector potential of Connerney et al.'s model of the equatorial current sheet in Jupiter's magnetosphere. Planetary and Space Science, 49, 1115– 1123. https://doi.org/10.1016/S0032-0633(00)00164-1</li>
+  <li>Wilson, R.J., Vogt, M.F., Provan, G. et al. Internal and External Jovian Magnetic Fields: Community Code to Serve the Magnetospheres of the Outer Planets Community. Space Sci Rev 219, 15 (2023). https://doi.org/10.1007/s11214-023-00961-3</li>
 </ul>
