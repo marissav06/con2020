@@ -5,7 +5,7 @@ This repository contains IDL and MATLAB code for the Connerney et al. (2020) Jup
 **Citation DOI**: <a href="https://doi.org/10.5281/zenodo.6981615">10.5281/zenodo.6981615</a> (for all releases)
 Each version release also has its own DOI, click the link above to get to the DOI of specific versions.
 
-**Journal Paper DOI**: https://doi.org/10.1007/s11214-023-00961-3 (PDF via DOI, or https://rdcu.be/c5I71, see Journal Publication.)
+**Journal Paper DOI**: <a href="https://doi.org/10.1007/s11214-023-00961-3">https://doi.org/10.1007/s11214-023-00961-3</a> (PDF via DOI, or <a href="https://rdcu.be/c5I71">https://rdcu.be/c5I71</a>)
 
 This code provides <b>only the magnetic field due to the current sheet</b>. For the full magnetospheric field one should include a model for Jupiter's internal magnetic field, such as VIP4 or JRM09. You can find IDL code for the JRM09 internal field model here: https://github.com/marissav06/jovian_jrm09_internal
 
