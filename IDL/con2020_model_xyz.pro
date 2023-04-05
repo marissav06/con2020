@@ -512,12 +512,19 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% the remaining calculations just rotate the field back into SIII
 
   ;%Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-  cos_phi1 = x1/rho1
-  sin_phi1 = y1/rho1
+  IF rho1 GT 0 THEN BEGIN ;% rho1 is alwas positive, from above, but could be 0.
+    cos_phi1 = x1/rho1
+    sin_phi1 = y1/rho1
 
-  bx1 = brho1*cos_phi1 - bphi1*sin_phi1
-  by1 = brho1*sin_phi1 + bphi1*cos_phi1
-
+    bx1 = brho1*cos_phi1 - bphi1*sin_phi1
+    by1 = brho1*sin_phi1 + bphi1*cos_phi1
+  ENDIF ELSE BEGIN ;% if rho = 0, then bx1 = by1 = 0
+    bx1 = 0d
+    by1 = 0d
+  ENDELSE
+  
+  ;% Now convert back to SYSIII
+  
   ;% Rotate back by current sheet tilt amount, into coordinate system that is aligned with Jupiter's spin axis
   bx = bx1*cos_theta_cs - bz1*sin_theta_cs
   ;by = by1; % just using by1 below
