@@ -1,6 +1,6 @@
 # Con2020 - Current Sheet Model Code
 
-This repository contains IDL and MATLAB code for the Connerney et al. (2020) Jupiter current sheet model. This is part of a community code project: [Magnetospheres of the Outer Planets Group Community Code](https://lasp.colorado.edu/home/mop/missions/juno/community-code). For Python versions, please see the [stand alone code](https://github.com/gabbyprovan/con2020/), or the [JupiterMag](https://github.com/mattkjames7/JupiterMag) package. 
+This repository contains IDL and MATLAB code for the Connerney et al. (2020) Jupiter current sheet model. This is part of a community code project: [Magnetospheres of the Outer Planets Group Community Code](https://lasp.colorado.edu/mop/missions/juno/community-code). For Python versions, please see the [stand alone code](https://github.com/gabbyprovan/con2020/), or the [JupiterMag](https://github.com/mattkjames7/JupiterMag) package. 
 
 **Citation DOI**: <a href="https://doi.org/10.5281/zenodo.6981615">10.5281/zenodo.6981615</a> (for all releases)
 Each version release also has its own DOI, click the link above to get to the DOI of specific versions.
