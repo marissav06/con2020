@@ -76,9 +76,11 @@
   ;% RJ Wilson renamed i_rho__radial_current_density_nT to i_rho__radial_current_intensity_MA in June 2022.
   ;% RJ Wilson renamed i_rho__radial_current_intensity_MA to i_rho__radial_current_MA and mu_i_div2__current_density_nT to mu_i_div2__current_parameter_nT in November 2022.
   ;% RJ Wilson put in a fix to prevent Infinities/NaNs in Bphi1 when rho1 = 0, and updated the Integral equation comment above to note that the outer edge always uses analytical equations, even if integral is chosen.
+  ;% RJ Wilson added the _con2020_model_xyz_params_to_string function to the end of the pro file.  May be useful for Field Line Tracing codes at a later date, but otherwise not called.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Function con2020_model_xyz begins around line 185. Sub-functions are listed first (in order to compile appropriately in IDL).
+; Function con2020_model_xyz begins around line 250. Sub-functions are listed first (in order to compile appropriately in IDL).
+; Function _con2020_model_xyz_params_to_string begins around line 190.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FUNCTION _con2020_model_xyz_analytic, rho1, z1, rho1_sq, d__cs_half_thickness_rj, r, mu_i_div2__current_parameter_nT, scalar_input
@@ -185,6 +187,66 @@ END
 ;  h = (X[Xsegments] - X[0]) / DOUBLE(Xsegments)
 ;  RETURN, h * (TOTAL(F) - (F[0] + F[Xsegments])*0.5d )
 ;END
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FUNCTION _con2020_model_xyz_params_to_string, params
+  ; Writes out the Con2020 code parameters structure to string, that could be executed later.
+  ;
+  ; To change the default parameters of the Con2020 model, first get the parameters with:
+  ;   params = con2020_model_xyz('default_values')
+  ; Then change any existing values as you wish, e.g.
+  ;   params.I_RHO__RADIAL_CURRENT_MA = 20.2d ; don't forget the d for double!
+  ; to write out the new structure to a string that could be executed later:
+  ;   struct_string = _con2020_model_xyz_params_to_string(params)
+  ; which would give the string:
+  ;   {MU_I_DIV2__CURRENT_PARAMETER_NT:139.6d,R0__INNER_RJ:7.8d,R1__OUTER_RJ:51.4d,D__CS_HALF_THICKNESS_RJ:3.6d,XT__CS_TILT_DEGS:9.3d,XP__CS_RHS_AZIMUTHAL_ANGLE_OF_TILT_DEGS:155.8d,I_RHO__RADIAL_CURRENT_MA:20.2d,ERROR_CHECK:1}
+  ;
+  ; The Con2020 code itself does not use this function. However, this may be useful later
+  ; for Field Line Tracing codes, etc.
+
+  COMPILE_OPT HIDDEN
+  ON_ERROR, 2
+
+  IF (SIZE(params, /TYPE) NE 8) THEN MESSAGE,'ERROR: Expected an input structure'
+
+  T     = TAG_NAMES(params)
+  nT_m1 = N_ELEMENTS(T) - 1L
+
+  cmd  = "{"
+  FOR z = 0L, nT_m1 DO BEGIN
+    IF ISA(params.(z), /NUMBER, /SCALAR) EQ 0 THEN MESSAGE,'ERROR: Fields are not all scalar numbers.'
+    IF ISA(params.(z), /COMPLEX        ) EQ 1 THEN MESSAGE,'ERROR: Fields are not all scalar real numbers: some are complex.'
+
+    cmd += T[z] + ':'
+
+    IF (ISA(params.(z),'DOUBLE') EQ 1) THEN BEGIN
+
+      cmd += STRTRIM(     params.(z)  ,2)
+      ; Remove trailing zeroes if stuff after decimal place
+      WHILE (STRCMP(STRMID(cmd, 0, 1, /REVERSE_OFFSET),'0') EQ 1) DO BEGIN
+        cmd = STRMID(cmd, 0L, STRLEN(cmd)-1L )
+        IF (STRLEN(cmd) LT 2) THEN MESSAGE,'ERROR: Had issues removing trailing zeros.'
+      ENDWHILE
+      ; If number ends with a decimal point, remove it.  i.e, 20.00000 becomes 20, nto 20.
+      IF (STRCMP(STRMID(cmd, 0, 1, /REVERSE_OFFSET),'.') EQ 1) THEN cmd = STRMID(cmd, 0L, STRLEN(cmd)-1L )
+      ; Add IDL symbol for double
+      cmd += 'd' ; d for double
+
+    ENDIF ELSE BEGIN ; must be a byte, for ERROR_CHECK
+
+      IF (ISA(params.(z),'BYTE') EQ 0) THEN MESSAGE,'ERROR: If not a Double, was expecting a Byte for ERROR_CHECK'
+      cmd += STRTRIM( FIX(params.(z)) ,2)
+
+    ENDELSE
+
+    IF (z NE nT_m1) THEN cmd += ','
+
+  ENDFOR
+  cmd += '}'
+
+  RETURN, cmd
+END
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Con2020 function begins here!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% ======
