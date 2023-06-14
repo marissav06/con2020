@@ -406,11 +406,16 @@ bz1         = bz1   - bz_finite  ;
 % the remaining calculations just rotate the field back into SIII
 
 %Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-cos_phi1 = x1./rho1 ;
-sin_phi1 = y1./rho1 ;
-
-bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
-by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
+if rho1 > 0 % rho1 is alwas positive, from above, but could be 0.
+    cos_phi1 = x1./rho1;
+    sin_phi1 = y1./rho1;
+    
+    bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
+    by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
+else % if rho = 0, then bx1 = by1 = 0
+    bx1 = 0;
+    by1 = 0;
+end
 
 % Now convert back to SYSIII
 
