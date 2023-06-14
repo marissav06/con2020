@@ -9,7 +9,7 @@ Each version release also has its own DOI, click the link above to get to the DO
 
 This code provides <b>only the magnetic field due to the current sheet</b>. For the full magnetospheric field one should include a model for Jupiter's internal magnetic field, such as VIP4 or JRM09. You can find IDL code for the JRM09 internal field model here: https://github.com/marissav06/jovian_jrm09_internal
 
-These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Provan, Marissa Vogt, and Rob Wilson, with thanks to Jack Connerney, Masafumi Imai, and Stan Cowley. The codes are intended for use by the Juno science team and other members of the planetary magnetospheres community. Questions, corrections, or other comments can be shared with the authors by emailing mvogt@bu.edu.
+These codes were developed by Marty Brennan, Stan Cowley, Matt James, Aneesah Kamran, Gabby Provan, Marissa Vogt, and Rob Wilson, with thanks to Fran Bagenal, Jack Connerney, and Masafumi Imai. The codes are intended for use by the Juno science team and other members of the planetary magnetospheres community. Questions, corrections, or other comments can be shared with the authors by emailing mvogt@bu.edu.
 
 These codes uses a right-handed System III (1965) (SYSIII) co-ordinate system (Cartesian or Spherical), and assumes that 1 jovian radius (R<sub>J</sub>) = 71,492 km.
 
