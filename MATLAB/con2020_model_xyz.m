@@ -382,9 +382,9 @@ if scalar_input
         bphi1 = 0; % Remove Infinity or NaN
     end
 else
-    ind = find(rho1 == 0);
-    if numel(ind) ~= 0 % a very very rare occurence
-        bphi1(ind) = 0; % Remove any Infinity or NaN
+    ind_rho1_eq_0 = find(rho1 == 0); % we use this again later
+    if numel(ind_rho1_eq_0) ~= 0 % a very very rare occurence
+        bphi1(ind_rho1_eq_0) = 0; % Remove any Infinity or NaN
         % will let scaling below on z1 happen as Bphi1 will still be 0 anyway
     end
 
@@ -406,17 +406,28 @@ bz1         = bz1   - bz_finite  ;
 % the remaining calculations just rotate the field back into SIII
 
 %Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-if rho1 > 0 % rho1 is alwas positive, from above, but could be 0.
-    cos_phi1 = x1./rho1;
-    sin_phi1 = y1./rho1;
+% rho1 is alwas positive, from above, but could be 0.
+cos_phi1 = x1./rho1;
+sin_phi1 = y1./rho1;
+% Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and x1=0 (or y1=0) and rho1 = 0
+% deal with this below, separately for scalar_input or vector
     
-    bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
-    by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
-else % if rho = 0, then bx1 = by1 = 0
-    bx1 = 0;
-    by1 = 0;
-end
+bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
+by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
 
+% if rho1 = 0, then bx1 and bx2 are not finite, so set bx1 = by1 = 0, but this is a rare occurence, removes infinities or NaNs
+if scalar_input
+    if rho1 == 0
+        bx1 = 0;
+        by1 = 0;
+    end
+else
+    % ind_rho1_eq_0 was defined in the radial current section
+    if numel(ind_rho1_eq_0) ~= 0 % a very very rare occurence
+        bx1(ind_rho1_eq_0) = 0;
+        by1(ind_rho1_eq_0) = 0;
+    end
+end
 % Now convert back to SYSIII
 
 % Rotate back by dipole tilt amount, into coordinate system that is aligned with Jupiter's spin axis

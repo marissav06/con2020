@@ -548,9 +548,9 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
       bphi1 = 0d ;% Remove Infinity or NaN
     ENDELSE
   ENDIF ELSE BEGIN
-    ind = WHERE(rho1 EQ 0d, NULL = 1)
-    IF N_ELEMENTS(ind) NE 0 THEN BEGIN ;% a very very rare occurence
-      bphi1[ind] = 0d ;% Remove any Infinity or NaN
+    ind_rho1_eq_0 = WHERE(rho1 EQ 0d, NULL = 1) ;% we use this again later
+    IF N_ELEMENTS(ind_rho1_eq_0) NE 0 THEN BEGIN ;% a very very rare occurence
+      bphi1[ind_rho1_eq_0] = 0d ;% Remove any Infinity or NaN
       ;% will let scaling below on z1 happen as Bphi1 will still be 0 anyway
     ENDIF
 
@@ -574,15 +574,27 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% the remaining calculations just rotate the field back into SIII
 
   ;%Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-  IF rho1 GT 0 THEN BEGIN ;% rho1 is alwas positive, from above, but could be 0.
-    cos_phi1 = x1/rho1
-    sin_phi1 = y1/rho1
+  ;% rho1 is alwas positive, from above, but could be 0.
+  cos_phi1 = x1/rho1
+  sin_phi1 = y1/rho1
+  ;% Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and x1=0 (or y1=0) and rho1 = 0
+  ;% deal with this below, separately for scalar_input or vector
 
-    bx1 = brho1*cos_phi1 - bphi1*sin_phi1
-    by1 = brho1*sin_phi1 + bphi1*cos_phi1
-  ENDIF ELSE BEGIN ;% if rho = 0, then bx1 = by1 = 0
-    bx1 = 0d
-    by1 = 0d
+  bx1 = brho1*cos_phi1 - bphi1*sin_phi1
+  by1 = brho1*sin_phi1 + bphi1*cos_phi1
+
+  ;% if rho1 = 0, then bx1 and bx2 are not finite, so set bx1 = by1 = 0, but this is a rare occurence, removes infinities or NaNs
+  IF scalar_input THEN BEGIN
+    IF rho1 EQ 0d THEN BEGIN
+      bx1 = 0d
+      by1 = 0d
+    ENDIF
+  ENDIF ELSE BEGIN
+    ;% ind_rho1_eq_0 was defined in the radial current section
+    IF N_ELEMENTS(ind_rho1_eq_0) NE 0 THEN BEGIN ;% a very very rare occurence
+      bx1[ind_rho1_eq_0] = 0d
+      by1[ind_rho1_eq_0] = 0d
+    ENDIF
   ENDELSE
   
   ;% Now convert back to SYSIII
