@@ -85,6 +85,9 @@ switch numel(varargin) % faster than if exist('use_these_params','var')
         if ~isstruct(use_these_params)
             error('Must be a structure of terms to use in code')
         end
+        if numel(fieldnames(use_these_params))~=8
+            error('ERROR: Expecting 8 fields in the structure, not %d.',numel(fieldnames(use_these_params)))
+        end
         mu_i_div2__current_parameter_nT         = double(use_these_params.mu_i_div2__current_parameter_nT        );
         r0__inner_rj                            = double(use_these_params.r0__inner_rj                           );
         r1__outer_rj                            = double(use_these_params.r1__outer_rj                           );
@@ -370,11 +373,13 @@ end
 
 
 % New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
-bphi1 = 2.7975*i_rho__radial_current_MA./rho1;
+% bphi1 = 2.7975*i_rho__radial_current_MA./rho1;
 % Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and i_rho__radial_current_MA=0 and rho1 = 0
 % deal with this below, separately for scalar_input or vector
 if scalar_input
     if rho1 ~= 0
+        bphi1 = 2.7975*i_rho__radial_current_MA/rho1;
+        
         if abs_z1 < d__cs_half_thickness_rj, bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj; end
 
         if     z1 > 0                      , bphi1 = -bphi1                                   ; end
@@ -382,12 +387,11 @@ if scalar_input
         bphi1 = 0; % Remove Infinity or NaN
     end
 else
-    ind = find(rho1 == 0);
-    if numel(ind) ~= 0 % a very very rare occurence
-        bphi1(ind) = 0; % Remove any Infinity or NaN
-        % will let scaling below on z1 happen as Bphi1 will still be 0 anyway
-    end
-
+    ind_rho1_ne_0 = find(rho1 ~= 0); % we use this again later
+    
+    bphi1 = zeros(N_input,1); % set bphi1 to zeros, the rho1 == 0 case
+    bphi1(ind_rho1_ne_0) = 2.7975*i_rho__radial_current_MA./rho1(ind_rho1_ne_0);
+    
     ind = find(abs_z1 < d__cs_half_thickness_rj);
     if ~isempty(ind), bphi1(ind) =  bphi1(ind) .* abs_z1(ind) / d__cs_half_thickness_rj; end
     
@@ -405,18 +409,35 @@ bz1         = bz1   - bz_finite  ;
 % brho1, bphi1, and bz1 here are the ultimately calculated brho and bz values from the CAN model
 % the remaining calculations just rotate the field back into SIII
 
-%Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-if rho1 > 0 % rho1 is alwas positive, from above, but could be 0.
-    cos_phi1 = x1./rho1;
-    sin_phi1 = y1./rho1;
-    
-    bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
-    by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
-else % if rho = 0, then bx1 = by1 = 0
-    bx1 = 0;
-    by1 = 0;
+% Calculate 'magnetic longitude' and convert the field into cartesian coordinates
+% rho1 is alwas positive, from above, but could be 0.
+if scalar_input
+    if rho1 ~= 0
+        cos_phi1 = x1/rho1;
+        sin_phi1 = y1/rho1;
+        bx1 = brho1*cos_phi1 - bphi1*sin_phi1;
+        by1 = brho1*sin_phi1 + bphi1*cos_phi1;
+    else % else rho1==0
+        bx1 = 0;
+        by1 = 0;
+    end
+else
+    % ind_rho1_ne_0 was defined in the radial current section
+    if numel(ind_rho1_ne_0) == N_input
+        cos_phi1 = x1./rho1;
+        sin_phi1 = y1./rho1;
+        bx1 = brho1.*cos_phi1 - bphi1.*sin_phi1;
+        by1 = brho1.*sin_phi1 + bphi1.*cos_phi1;
+    else
+        bx1 = zeros(N_input,1); % set bx1 and by1 to zeros, the rho1 == 0 case
+        by1 = bx1;
+        ind_rho1_ne_0 = find(rho1 ~= 0);
+        cos_phi1 = x1(ind_rho1_ne_0)./rho1(ind_rho1_ne_0);
+        sin_phi1 = y1(ind_rho1_ne_0)./rho1(ind_rho1_ne_0);
+        bx1(ind_rho1_ne_0) = brho1(ind_rho1_ne_0).*cos_phi1 - bphi1(ind_rho1_ne_0).*sin_phi1;
+        by1(ind_rho1_ne_0) = brho1(ind_rho1_ne_0).*sin_phi1 + bphi1(ind_rho1_ne_0).*cos_phi1;
+    end
 end
-
 % Now convert back to SYSIII
 
 % Rotate back by dipole tilt amount, into coordinate system that is aligned with Jupiter's spin axis

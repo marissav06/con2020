@@ -8,7 +8,7 @@
   ;%  The disk is centered on the magnetic equator (shifted in longitude and tilted as specified by model parameters xp__cs_rhs_azimuthal_angle_of_tilt_degs and xt__cs_tilt_degs)
   ;%  This 2020 version includes a radial current per Connerney et al. (2020),
   ;%   https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JA028138
-  ;%  For more details about the model and the development of this code please see the PDF at 
+  ;%  For more details about the model and the development of this code please see the PDF at
   ;%   https://github.com/marissav06/con2020_idl/blob/main/con2020_final_code_documentation_sept13_2021.pdf
   ;%
   ;% Use in one of the following ways:
@@ -78,10 +78,10 @@
   ;% RJ Wilson put in a fix to prevent Infinities/NaNs in Bphi1 when rho1 = 0, and updated the Integral equation comment above to note that the outer edge always uses analytical equations, even if integral is chosen.
   ;% RJ Wilson added the _con2020_model_xyz_params_to_string function to the end of the pro file.  May be useful for Field Line Tracing codes at a later date, but otherwise not called.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Function con2020_model_xyz begins around line 250. Sub-functions are listed first (in order to compile appropriately in IDL).
-; Function _con2020_model_xyz_params_to_string begins around line 190.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Function con2020_model_xyz begins around line 250. Sub-functions are listed first (in order to compile appropriately in IDL).
+  ; Function _con2020_model_xyz_params_to_string begins around line 190.
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FUNCTION _con2020_model_xyz_analytic, rho1, z1, rho1_sq, d__cs_half_thickness_rj, r, mu_i_div2__current_parameter_nT, scalar_input
   COMPILE_OPT HIDDEN
@@ -255,7 +255,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% Code to calculate the perturbation magnetic field produced by the Connerney et al. 1981 (CAN) current sheet, which is
   ;% represented by a finite disk of current.
   ;%
-  ;% More details are provided in comments at top of this file. 
+  ;% More details are provided in comments at top of this file.
 
   ON_ERROR, 2 ; % Exit code if an error in main, don't stop in code - no Matlab equivalent, just delete line in Matlab
   FORWARD_FUNCTION _con2020_model_xyz_analytic ; telling IDL this is a function, in case _con2020_model_xyz_analytic has not been compiled yet.
@@ -266,6 +266,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
 
   IF KEYWORD_SET(use_these_params) THEN BEGIN
     IF (ISA(use_these_params,'STRUCT') EQ 0) THEN MESSAGE,'Must be a structure of terms to use in code'
+    IF N_ELEMENTS(TAG_NAMES(use_these_params)) NE 8 THEN MESSAGE,'ERROR: Expecting 8 fields in the structure, not '+STRTRIM(N_ELEMENTS(TAG_NAMES(use_these_params)),2)
     mu_i_div2__current_parameter_nT         = DOUBLE(use_these_params.mu_i_div2__current_parameter_nT           )
     r0__inner_rj                            = DOUBLE(use_these_params.r0__inner_rj                              )
     r1__outer_rj                            = DOUBLE(use_these_params.r1__outer_rj                              )
@@ -356,7 +357,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     ENDELSE
   ENDIF
 
-  xp__cs_rhs_azimuthal_angle_of_tilt_degs -= 180.0d ;shift needed because of the way we define the rotation angle 
+  xp__cs_rhs_azimuthal_angle_of_tilt_degs -= 180.0d ;shift needed because of the way we define the rotation angle
   dipole_shift = xp__cs_rhs_azimuthal_angle_of_tilt_degs * Deg2Rad; % xp__cs_rhs_azimuthal_angle_of_tilt_degs is longitude of the current sheet tilt (roughly the dipole longitude). dipole_shift used here and at end of code
   theta_cs     = xt__cs_tilt_degs * Deg2Rad ; % dipole tilt is xt__cs_tilt_degs
   cos_dipole_shift = cos(dipole_shift)
@@ -536,11 +537,13 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
 
 
   ;% New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
-  bphi1 = 2.7975d*i_rho__radial_current_MA/rho1
+  ;% bphi1 = 2.7975d*i_rho__radial_current_MA/rho1
   ;% Above could give Infinities if rho1 = 0, or NaN is rho1 = 0 and i_rho__radial_current_MA=0 and rho1 = 0
   ;% deal with this below, separately for scalar_input or vector
   IF scalar_input THEN BEGIN
     IF rho1 NE 0d THEN BEGIN
+      bphi1 = 2.7975d*i_rho__radial_current_MA/rho1
+      
       IF abs_z1 LT d__cs_half_thickness_rj  THEN bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj
 
       IF     z1 GT     0d                   THEN bphi1 = -bphi1
@@ -548,11 +551,10 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
       bphi1 = 0d ;% Remove Infinity or NaN
     ENDELSE
   ENDIF ELSE BEGIN
-    ind = WHERE(rho1 EQ 0d, NULL = 1)
-    IF N_ELEMENTS(ind) NE 0 THEN BEGIN ;% a very very rare occurence
-      bphi1[ind] = 0d ;% Remove any Infinity or NaN
-      ;% will let scaling below on z1 happen as Bphi1 will still be 0 anyway
-    ENDIF
+    ind_rho1_ne_0 = WHERE(rho1 NE 0d, NULL = 1) ;% we use this again later
+
+    bphi1 = DBLARR(N_input) ;% set bphi1 to zeros, the rho1 == 0 case
+    bphi1[ind_rho1_ne_0] = 2.7975d*i_rho__radial_current_MA/rho1[ind_rho1_ne_0]
 
     ind = WHERE(abs_z1 LT d__cs_half_thickness_rj, NULL=1)
     IF N_ELEMENTS(ind) NE 0 THEN bphi1[ind] =  bphi1[ind] * abs_z1[ind] / d__cs_half_thickness_rj
@@ -573,20 +575,37 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% brho1, bphi1, and bz1 here are the ultimately calculated brho and bz values from the CAN model
   ;% the remaining calculations just rotate the field back into SIII
 
-  ;%Calculate 'magnetic longitude' and convert the field into cartesian coordinates
-  IF rho1 GT 0 THEN BEGIN ;% rho1 is alwas positive, from above, but could be 0.
-    cos_phi1 = x1/rho1
-    sin_phi1 = y1/rho1
-
-    bx1 = brho1*cos_phi1 - bphi1*sin_phi1
-    by1 = brho1*sin_phi1 + bphi1*cos_phi1
-  ENDIF ELSE BEGIN ;% if rho = 0, then bx1 = by1 = 0
-    bx1 = 0d
-    by1 = 0d
+  ;% Calculate 'magnetic longitude' and convert the field into cartesian coordinates
+  ;% rho1 is alwas positive, from above, but could be 0, and don't want a divide by zero
+  IF scalar_input THEN BEGIN
+    IF rho1 NE 0d THEN BEGIN
+      cos_phi1 = x1/rho1
+      sin_phi1 = y1/rho1
+      bx1 = brho1*cos_phi1 - bphi1*sin_phi1
+      by1 = brho1*sin_phi1 + bphi1*cos_phi1
+    ENDIF ELSE BEGIN ;% else rho1==0
+      bx1 = 0d
+      by1 = 0d
+    ENDELSE
+  ENDIF ELSE BEGIN
+    ;% ind_rho1_ne_0 was defined in the radial current section
+    IF N_ELEMENTS(ind_rho1_ne_0) EQ N_input THEN BEGIN 
+      cos_phi1 = x1/rho1
+      sin_phi1 = y1/rho1
+      bx1 = brho1*cos_phi1 - bphi1*sin_phi1
+      by1 = brho1*sin_phi1 + bphi1*cos_phi1
+    ENDIF ELSE BEGIN
+      bx1 = DBLARR(N_input) ;% set bx1 and by1 to zeros, the rho1 == 0 case
+      by1 = bx1
+      cos_phi1 = x1[ind_rho1_ne_0]/rho1[ind_rho1_ne_0]
+      sin_phi1 = y1[ind_rho1_ne_0]/rho1[ind_rho1_ne_0]
+      bx1[ind_rho1_ne_0] = brho1[ind_rho1_ne_0]*cos_phi1 - bphi1[ind_rho1_ne_0]*sin_phi1
+      by1[ind_rho1_ne_0] = brho1[ind_rho1_ne_0]*sin_phi1 + bphi1[ind_rho1_ne_0]*cos_phi1
+    ENDELSE
   ENDELSE
-  
+
   ;% Now convert back to SYSIII
-  
+
   ;% Rotate back by current sheet tilt amount, into coordinate system that is aligned with Jupiter's spin axis
   bx = bx1*cos_theta_cs - bz1*sin_theta_cs
   ;by = by1; % just using by1 below
